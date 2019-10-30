@@ -1,61 +1,37 @@
-const routes = async (app) => {
-  const todos = [];
-  const responseCreator = (data, success) => ({
-    payload: {
-      ...data,
-    },
-    success
-  });
+const Todo = require('../models/Todo');
 
-
-
+module.exports = async (app) => {
   app.get('/', async (request, reply) => {
-    return responseCreator({
-      todos
-    }, true);
+    Todo.find((error, result) => {
+      if (error) {
+        reply.send(error);
+      }
+
+      reply.send(result);
+    });
   });
 
-  app.post('/', async (request) => {
-    const todo = {
-      id: todos.length,
-      title: request.body.title,
-    };
+  app.post('/', async (request, reply) => {
+    Todo.create({
+      title: request.body.title
+    }, function (error, result) {
+      if (error) {
+        reply.send(error);
+      }
 
-    await todos.push(todo);
-    return responseCreator({}, true);
+      reply.send(result);
+    });
   });
 
-  app.delete('/:id(\\d+)', async (request, reply) => {
-    const id = Number(request.params.id);
-    const todoIndex = todos.findIndex((todo) => todo.id === id);
-    const todo = todos[todoIndex];
+  app.delete('/:id', async (request, reply) => {
+    Todo.remove({
+      _id: request.params.id
+    }, function (error, result) {
+      if (error) {
+        reply.send(error);
+      }
 
-    if (todoIndex !== -1) {
-      todos.splice(todoIndex, 1);
-
-      return responseCreator({
-        todo,
-      }, true);
-    }
-
-    reply.callNotFound();
-  });
-
-  app.put('/:id(\\d+)', async (request, reply) => {
-    const id = Number(request.params.id);
-    const todoIndex = todos.findIndex((todo) => todo.id === id);
-    const todo = todos[todoIndex];
-
-    if (todoIndex !== -1) {
-      todo.title = request.body.title;
-
-      return responseCreator({
-        todo,
-      }, true);
-    }
-
-    reply.callNotFound();
+      reply.send(result);
+    });
   });
 };
-
-module.exports = routes;
